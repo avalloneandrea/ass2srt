@@ -7,7 +7,6 @@ if [ "$1" = "" ]; then
 else
   DIR="$1"
 fi
-echo "Directory $DIR"
 
 # Get all the MKV files in this dir and its subdirs
 find "$DIR" -type f -name '*.mkv' | sort | while read filename
@@ -30,7 +29,7 @@ do
 
   # Extract the track to a .ass file and convert to a .srt file
   echo "Processing $filename"
-  mkvextract tracks "$filename" $TN:"$subtitlename.ass" && \
-  ffmpeg -i "$subtitlename.ass" "$subtitlename.srt" && \
+  mkvextract tracks "$filename" $TN:"$subtitlename.ass"
+  ffmpeg -nostdin -hide_banner -i "$subtitlename.ass" "$subtitlename.srt"
   rm "$subtitlename.ass"
 done
