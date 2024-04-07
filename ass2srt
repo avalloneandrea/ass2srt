@@ -1,6 +1,6 @@
 #!/bin/bash
 
-xecho () { if [[ "$v" -eq 1 ]]; then echo "+ $*"; fi }
+xecho() { if [[ "$v" -eq 1 ]]; then echo "+ $*"; fi; }
 
 while getopts ":p:l:v" OPT; do
   case "$OPT" in
