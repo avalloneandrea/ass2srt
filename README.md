@@ -23,7 +23,6 @@ Explain what is being done.
 #### Installation
 
 ```
-sudo apt install jq
 sudo curl https://raw.githubusercontent.com/avalloneandrea/ass2srt/main/ass2srt -o ~/Downloads/ass2srt
 sudo install ~/Downloads/ass2srt /usr/local/sbin
 sudo rm ~/Downloads/ass2srt
