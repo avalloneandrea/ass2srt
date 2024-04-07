@@ -1,53 +1,50 @@
 #!/bin/bash
 
-xecho () { if [[ "$v" -eq 1 ]]; then echo " + $@"; fi }
+xecho () { if [[ "$v" -eq 1 ]]; then echo "+ $*"; fi }
 
-while getopts ":l:p:v" OPT; do
+while getopts ":p:l:v" OPT; do
   case "$OPT" in
-    l) lang="$OPTARG" ;;
     p) path="$OPTARG" ;;
+    l) lang="$OPTARG" ;;
     v) v=1 ;;
+    *) echo "Usage: ass2srt [-p path] [-l language] [-v verbose]"; exit 1;;
   esac
 done
 
 if ! [ -e "$path" ]; then
-  path=`pwd`
+  path=$(pwd)
 fi
 
-xecho "ass2srt ( lang = '$lang', path = '$path', verbose = '$v' )"
+xecho "ass2srt [path='$path' language='$lang' verbose='$v']"
 
-find "$path" -type f -name '*.mkv' | sort | while read file; do
+find "$(realpath -- "$path")" -type f -name '*.mkv' | sort | while read -r file; do
 
-  xecho "file = $file"
+  xecho "Processing file '$file'"
 
-  filename="${file##*/}"
   if [ -z "$lang" ]; then
-    basename="${filename%.*}"
+    base="${file%.*}"
   else
-    basename="${filename%.*}.$lang"
+    base="${file%.*}.$lang"
   fi
 
-  if [ -e "$basename.srt" ]; then
-    xecho "Found $basename.srt"
-    echo "Skipping $file"
+  if [ -e "$base.srt" ]; then
+    xecho "Subtitles found, skipping"
     continue
   fi
 
   if [ -z "$lang" ]; then
-    track=`mkvmerge -J "$file" | jq "first ( .tracks[]? | select ( .codec == \"SubStationAlpha\" ) .id )"`
+    track=$(mkvmerge -J "$file" | jq "first ( .tracks[]? | select ( .codec == \"SubStationAlpha\" ) .id )")
   else
-    track=`mkvmerge -J "$file" | jq "first ( .tracks[]? | select ( .codec == \"SubStationAlpha\" ) | select ( .properties.language == \"$lang\" ) .id )"`
+    track=$(mkvmerge -J "$file" | jq "first ( .tracks[]? | select ( .codec == \"SubStationAlpha\" ) | select ( .properties.language == \"$lang\" ) .id )")
   fi
-
-  xecho "track = $track"
 
   if [ -z "$track" ]; then
-    echo "Skipping $file"
+    xecho "No track found, skipping"
     continue
   fi
 
-  mkvextract tracks "$file" $track:"$basename.ass"
-  ffmpeg -nostdin -hide_banner -i "$basename.ass" "$basename.srt"
-  rm "$basename.ass"
+  mkvextract tracks "$file" "$track":"$base.ass"
+  ffmpeg -nostdin -hide_banner -i "$base.ass" "$base.srt"
+  rm "$base.ass"
 
 done
